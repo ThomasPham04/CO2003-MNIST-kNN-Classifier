@@ -16,3 +16,5 @@
 
 using namespace std;
 #endif //DSA232_A1_MAIN_H
+
+// g++ -o main main.cpp kDTree.cpp Dataset.o -I . -std=c++11
