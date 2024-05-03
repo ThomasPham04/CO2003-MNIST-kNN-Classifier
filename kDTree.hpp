@@ -26,6 +26,7 @@ public:
     kDTree(int k = 2);
     ~kDTree();
 
+    kDTreeNode* deepCopy(const kDTreeNode* root);
     const kDTree &operator=(const kDTree &other);
     kDTree(const kDTree &other);
 
