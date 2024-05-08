@@ -25,25 +25,25 @@ kDTree::kDTree(const kDTree &other)
 }
 
 
-void kDTree::buildTree(const vector<vector<int>> &pointList) {
-    root = buildTreeRecursive(pointList, 0);
-}
+// void kDTree::buildTree(const vector<vector<int>> &pointList) {
+//     root = buildTreeRecursive(pointList, 0);
+// }
 
-kDTreeNode* kDTree::buildTreeRecursive(const vector<vector<int>> &pointList, int depth) {
-    if (pointList.empty()) return nullptr;
+// kDTreeNode* kDTree::buildTreeRecursive(const vector<vector<int>> &pointList, int depth) {
+//     if (pointList.empty()) return nullptr;
 
-    int axis = depth % k;
-    int median = pointList.size() / 2;
+//     int axis = depth % k;
+//     int median = pointList.size() / 2;
 
-    // Sort pointList based on the axis
-    // For simplicity, you can use a sorting algorithm like quicksort
+//     // Sort pointList based on the axis
+//     // For simplicity, you can use a sorting algorithm like quicksort
 
-    kDTreeNode *node = new kDTreeNode(pointList[median]);
-    node->left = buildTreeRecursive(/* left half of pointList */, depth + 1);
-    node->right = buildTreeRecursive(/* right half of pointList */, depth + 1);
+//     kDTreeNode *node = new kDTreeNode(pointList[median]);
+//     node->left = buildTreeRecursive(/* left half of pointList */, depth + 1);
+//     node->right = buildTreeRecursive(/* right half of pointList */, depth + 1);
 
-    return node;
-}
+//     return node;
+// }
 
 int kDTree::chooseSplitAxis(const vector<vector<int>> &pointList, int depth) {
     // Implement your split axis selection logic here
@@ -51,22 +51,24 @@ int kDTree::chooseSplitAxis(const vector<vector<int>> &pointList, int depth) {
 }
 
 void kDTree::insert(const vector<int> &point) {
+    if (point.size() != k){
+        return;
+    }
     insertRecursive(root, point, 0);
+    count++;
 }
 
-void kDTree::insertRecursive(kDTreeNode *&node, const vector<int> &point, int depth) {
-    if (node == nullptr) {
+void kDTree::insertRecursive(kDTreeNode *&node, const vector<int> &point, int depth){
+    if (node == nullptr){
         node = new kDTreeNode(point);
         return;
     }
-
     int axis = depth % k;
     if (point[axis] < node->data[axis])
         insertRecursive(node->left, point, depth + 1);
-    else
+    else 
         insertRecursive(node->right, point, depth + 1);
 }
-
 bool kDTree::search(const vector<int> &point) {
     return searchRecursive(root, point, 0);
 }
@@ -84,6 +86,7 @@ bool kDTree::searchRecursive(kDTreeNode *node, const vector<int> &point, int dep
 
 void kDTree::remove(const vector<int> &point) {
     removeRecursive(root, point, 0);
+    count--;
 }
 
 void kDTree::removeRecursive(kDTreeNode *&node, const vector<int> &point, int depth) {
@@ -182,14 +185,8 @@ int kDTree::heightRecursive(kDTreeNode *node) const {
 }
 
 int kDTree::nodeCount() const {
-    return nodeCountRecursive(root);
+    return count;
 }
-
-int kDTree::nodeCountRecursive(kDTreeNode *node) const {
-    if (node == nullptr) return 0;
-    return 1 + nodeCountRecursive(node->left) + nodeCountRecursive(node->right);
-}
-
 int kDTree::leafCount() const {
     return leafCountRecursive(root);
 }
@@ -200,74 +197,74 @@ int kDTree::leafCountRecursive(kDTreeNode *node) const {
     return leafCountRecursive(node->left) + leafCountRecursive(node->right);
 }
 
-void kDTree::nearestNeighbour(const vector<int> &target) {
-    kDTreeNode *best = nullptr;
-    nearestNeighbourRecursive(root, target, best, 0);
-    if (best != nullptr) {
-        cout << "Nearest neighbor to target (";
-        for (int i = 0; i < k - 1; ++i)
-            cout << target[i] << ", ";
-        cout << target[k - 1] << ") is (";
-        for (int i = 0; i < k - 1; ++i)
-            cout << best->data[i] << ", ";
-        cout << best->data[k - 1] << ")" << endl;
-    } else {
-        cout << "No nearest neighbor found!" << endl;
-    }
-}
+// void kDTree::nearestNeighbour(const vector<int> &target) {
+//     kDTreeNode *best = nullptr;
+//     nearestNeighbourRecursive(root, target, best, 0);
+//     if (best != nullptr) {
+//         cout << "Nearest neighbor to target (";
+//         for (int i = 0; i < k - 1; ++i)
+//             cout << target[i] << ", ";
+//         cout << target[k - 1] << ") is (";
+//         for (int i = 0; i < k - 1; ++i)
+//             cout << best->data[i] << ", ";
+//         cout << best->data[k - 1] << ")" << endl;
+//     } else {
+//         cout << "No nearest neighbor found!" << endl;
+//     }
+// }
 
-void kDTree::nearestNeighbourRecursive(kDTreeNode *node, const vector<int> &target, kDTreeNode *&best, int depth) {
-    if (node == nullptr) return;
-    if (best == nullptr || distance(node->data, target) < distance(best->data, target))
-        best = node;
+// void kDTree::nearestNeighbourRecursive(kDTreeNode *node, const vector<int> &target, kDTreeNode *&best, int depth) {
+//     if (node == nullptr) return;
+//     if (best == nullptr || distance(node->data, target) < distance(best->data, target))
+//         best = node;
 
-    int axis = depth % k;
-    if (target[axis] < node->data[axis]) {
-        nearestNeighbourRecursive(node->left, target, best, depth + 1);
-        if (node->right != nullptr && distance(node->right->data, target) < distance(best->data, target))
-            nearestNeighbourRecursive(node->right, target, best, depth + 1);
-    } else {
-        nearestNeighbourRecursive(node->right, target, best, depth + 1);
-        if (node->left != nullptr && distance(node->left->data, target) < distance(best->data, target))
-            nearestNeighbourRecursive(node->left, target, best, depth + 1);
-    }
-}
+//     int axis = depth % k;
+//     if (target[axis] < node->data[axis]) {
+//         nearestNeighbourRecursive(node->left, target, best, depth + 1);
+//         if (node->right != nullptr && distance(node->right->data, target) < distance(best->data, target))
+//             nearestNeighbourRecursive(node->right, target, best, depth + 1);
+//     } else {
+//         nearestNeighbourRecursive(node->right, target, best, depth + 1);
+//         if (node->left != nullptr && distance(node->left->data, target) < distance(best->data, target))
+//             nearestNeighbourRecursive(node->left, target, best, depth + 1);
+//     }
+// }
 
-void kDTree::kNearestNeighbour(const vector<int> &target, int k, vector<kDTreeNode *> &bestList) {
-    kNearestNeighbourRecursive(root, target, k, bestList, 0);
-}
+// void kDTree::kNearestNeighbour(const vector<int> &target, int k, vector<kDTreeNode *> &bestList) {
+//     kNearestNeighbourRecursive(root, target, k, bestList, 0);
+// }
 
-void kDTree::kNearestNeighbourRecursive(kDTreeNode *node, const vector<int> &target, int k, vector<kDTreeNode *> &bestList, int depth) {
-    if (node == nullptr) return;
+// void kDTree::kNearestNeighbourRecursive(kDTreeNode *node, const vector<int> &target, int k, vector<kDTreeNode *> &bestList, int depth) {
+//     if (node == nullptr) return;
 
-    if (bestList.size() < k) {
-        bestList.push_back(node);
-    } else {
-        double maxDistance = 0;
-        int indexToReplace = -1;
-        for (int i = 0; i < k; ++i) {
-            double dist = distance(bestList[i]->data, target);
-            if (dist > maxDistance) {
-                maxDistance = dist;
-                indexToReplace = i;
-            }
-        }
-        if (distance(node->data, target) < maxDistance) {
-            bestList[indexToReplace] = node;
-        } else {
-            return; // No need to explore further
-        }
-    }
+//     if (bestList.size() < k) {
+//         bestList.push_back(node);
+//     } else {
+//         double maxDistance = 0;
+//         int indexToReplace = -1;
+//         for (int i = 0; i < k; ++i) {
+//             double dist = distance(bestList[i]->data, target);
+//             if (dist > maxDistance) {
+//                 maxDistance = dist;
+//                 indexToReplace = i;
+//             }
+//         }
+//         if (distance(node->data, target) < maxDistance) {
+//             bestList[indexToReplace] = node;
+//         } else {
+//             return; // No need to explore further
+//         }
+//     }
 
-    int axis = depth % k;
-    if (target[axis] < node->data[axis]) {
-        kNearestNeighbourRecursive(node->left, target, k, bestList, depth + 1);
-        if (node->right != nullptr && distance(node->right->data, target) < distance(bestList.back()->data, target))
-            kNearestNeighbourRecursive(node->right, target, k, bestList, depth + 1);
-    } else {
-        kNearestNeighbourRecursive(node->right, target, k, bestList, depth + 1);
-        if (node->left != nullptr && distance(node->left->data, target) < distance(bestList.back()->data, target))
-            kNearestNeighbourRecursive(node->left, target, k, bestList, depth + 1);
-    }
-}
+//     int axis = depth % k;
+//     if (target[axis] < node->data[axis]) {
+//         kNearestNeighbourRecursive(node->left, target, k, bestList, depth + 1);
+//         if (node->right != nullptr && distance(node->right->data, target) < distance(bestList.back()->data, target))
+//             kNearestNeighbourRecursive(node->right, target, k, bestList, depth + 1);
+//     } else {
+//         kNearestNeighbourRecursive(node->right, target, k, bestList, depth + 1);
+//         if (node->left != nullptr && distance(node->left->data, target) < distance(bestList.back()->data, target))
+//             kNearestNeighbourRecursive(node->left, target, k, bestList, depth + 1);
+//     }
+// }
 /****************************************END KDTREE****************************************/

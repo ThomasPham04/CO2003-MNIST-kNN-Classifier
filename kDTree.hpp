@@ -36,6 +36,7 @@ class kDTree
 {
 private:
     int k;
+    int count;
     kDTreeNode *root;
 private:
 kDTreeNode* buildTreeRecursive(const vector<vector<int>> &pointList, int depth);
@@ -53,9 +54,10 @@ kDTreeNode* buildTreeRecursive(const vector<vector<int>> &pointList, int depth);
     void nearestNeighbourRecursive(kDTreeNode *node, const vector<int> &target, kDTreeNode *&best, int depth);
     void kNearestNeighbourRecursive(kDTreeNode *node, const vector<int> &target, int k, vector<kDTreeNode *> &bestList, int depth);
 public:
-    kDTree(int k = 2);
+    kDTree(int k = 2, int count = 0);
     ~kDTree();
-
+ 
+    kDTreeNode* deepCopy(const kDTreeNode* node);
     const kDTree &operator=(const kDTree &other);
     kDTree(const kDTree &other);
 
