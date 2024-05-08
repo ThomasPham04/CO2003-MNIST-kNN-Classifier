@@ -61,6 +61,8 @@ public:
     const kDTree &operator=(const kDTree &other);
     kDTree(const kDTree &other);
 
+    vector<vector<int>> merge(const vector<vector<int>> &left, const vector<vector<int>>&right, int axis);
+    vector<vector<int>> mergeSort(const vector<vector<int>> &arr, int axis);
     void inorderTraversal() const;
     void preorderTraversal() const;
     void postorderTraversal() const;

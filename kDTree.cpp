@@ -25,26 +25,90 @@ kDTree::kDTree(const kDTree &other)
 }
 
 
-// void kDTree::buildTree(const vector<vector<int>> &pointList) {
-//     root = buildTreeRecursive(pointList, 0);
-// }
+void kDTree::buildTree(const vector<vector<int>> &pointList) {
+    // Khởi tạo root của cây bằng cách xây dựng cây từ danh sách điểm
+    root = buildTreeRecursive(pointList, 0);
+}
 
-// kDTreeNode* kDTree::buildTreeRecursive(const vector<vector<int>> &pointList, int depth) {
-//     if (pointList.empty()) return nullptr;
+kDTreeNode* kDTree::buildTreeRecursive(const vector<vector<int>> &pointList, int depth) {
+    // Nếu danh sách điểm rỗng, trả về nullptr
+    if (pointList.empty()) {
+        return nullptr;
+    }
 
-//     int axis = depth % k;
-//     int median = pointList.size() / 2;
+    // Xác định chiều chia tại nút hiện tại
+    int axis = depth % k;
 
-//     // Sort pointList based on the axis
-//     // For simplicity, you can use a sorting algorithm like quicksort
+    // Sắp xếp danh sách các điểm theo chiều của mặt phẳng chia hiện tại bằng thuật toán Merge Sort
+    vector<vector<int>> sortedPointList = mergeSort(pointList, axis);
 
-//     kDTreeNode *node = new kDTreeNode(pointList[median]);
-//     node->left = buildTreeRecursive(/* left half of pointList */, depth + 1);
-//     node->right = buildTreeRecursive(/* right half of pointList */, depth + 1);
+    // Tìm chỉ số của điểm trung vị
+    size_t medianIndex = sortedPointList.size() / 2;
 
-//     return node;
-// }
+    // Tạo nút cho điểm trung vị
+    kDTreeNode *medianNode = new kDTreeNode(sortedPointList[medianIndex]);
 
+    // Xây dựng cây con bên trái từ danh sách các điểm bé hơn điểm trung vị
+    vector<vector<int>> leftPointList(sortedPointList.begin(), sortedPointList.begin() + medianIndex);
+    medianNode->left = buildTreeRecursive(leftPointList, depth + 1);
+
+    // Xây dựng cây con bên phải từ danh sách các điểm lớn hơn hoặc bằng điểm trung vị
+    vector<vector<int>> rightPointList(sortedPointList.begin() + medianIndex + 1, sortedPointList.end());
+    medianNode->right = buildTreeRecursive(rightPointList, depth + 1);
+
+    return medianNode;
+}
+
+vector<vector<int>> kDTree::mergeSort(const vector<vector<int>> &arr, int axis) {
+    // Nếu danh sách có ít hơn hoặc bằng một phần tử, trả về danh sách đó
+    if (arr.size() <= 1) {
+        return arr;
+    }
+
+    // Tìm chỉ số của điểm giữa danh sách
+    size_t mid = arr.size() / 2;
+
+    // Tạo danh sách con bên trái và bên phải
+    vector<vector<int>> left(arr.begin(), arr.begin() + mid);
+    vector<vector<int>> right(arr.begin() + mid, arr.end());
+
+    // Sắp xếp các danh sách con bên trái và bên phải
+    left = mergeSort(left, axis);
+    right = mergeSort(right, axis);
+
+    // Hợp nhất các danh sách đã sắp xếp
+    return merge(left, right, axis);
+}
+
+vector<vector<int>> kDTree::merge(const vector<vector<int>> &left, const vector<vector<int>> &right, int axis) {
+    vector<vector<int>> result;
+    size_t leftIdx = 0;
+    size_t rightIdx = 0;
+
+    // Hợp nhất các phần tử từ hai danh sách con theo chiều của mặt phẳng chia
+    while (leftIdx < left.size() && rightIdx < right.size()) {
+        if (left[leftIdx][axis] < right[rightIdx][axis]) {
+            result.push_back(left[leftIdx]);
+            leftIdx++;
+        } else {
+            result.push_back(right[rightIdx]);
+            rightIdx++;
+        }
+    }
+
+    // Chuyển các phần tử còn lại từ danh sách con không được hợp nhất
+    while (leftIdx < left.size()) {
+        result.push_back(left[leftIdx]);
+        leftIdx++;
+    }
+
+    while (rightIdx < right.size()) {
+        result.push_back(right[rightIdx]);
+        rightIdx++;
+    }
+
+    return result;
+}
 int kDTree::chooseSplitAxis(const vector<vector<int>> &pointList, int depth) {
     // Implement your split axis selection logic here
     return depth % k;
@@ -85,33 +149,46 @@ bool kDTree::searchRecursive(kDTreeNode *node, const vector<int> &point, int dep
 }
 
 void kDTree::remove(const vector<int> &point) {
+    if (point.size() != k){
+        return;
+    }
     removeRecursive(root, point, 0);
     count--;
 }
 
 void kDTree::removeRecursive(kDTreeNode *&node, const vector<int> &point, int depth) {
-    if (node == nullptr) return;
+    if (node == nullptr) {
+        return;
+    }
 
     int axis = depth % k;
-    if (point[axis] < node->data[axis])
-        removeRecursive(node->left, point, depth + 1);
-    else if (point[axis] > node->data[axis])
-        removeRecursive(node->right, point, depth + 1);
-    else {
-        if (node->left == nullptr && node->right == nullptr) {
+
+    if (node->data == point) {
+        if (node->right != nullptr) {
+            kDTreeNode *minNode = findMinNode(node->right, axis, depth + 1);
+            // Copy data of the minimum node to the current node
+            node->data = minNode->data;
+            // Recursively remove the minimum node
+            removeRecursive(node->right, minNode->data, depth + 1);
+        } else if (node->left != nullptr) {
+            // Find the minimum node in the left subtree
+            kDTreeNode *minNode = findMinNode(node->left, axis, depth + 1);
+            // Copy data of the minimum node to the current node
+            node->data = minNode->data;
+            // Recursively remove the minimum node
+            removeRecursive(node->left, minNode->data, depth + 1);
+        } else {
+            // Node is a leaf, simply delete it
             delete node;
             node = nullptr;
-        } else if (node->right != nullptr) {
-            kDTreeNode *minNode = findMinNode(node->right, axis, depth + 1);
-            node->data = minNode->data;
-            removeRecursive(node->right, minNode->data, depth + 1);
-        } else {
-            kDTreeNode *minNode = findMinNode(node->left, axis, depth + 1);
-            node->data = minNode->data;
-            removeRecursive(node->left, minNode->data, depth + 1);
         }
+    } else if (point[axis] < node->data[axis]) {
+        removeRecursive(node->left, point, depth + 1);
+    } else {
+        removeRecursive(node->right, point, depth + 1);
     }
 }
+
 
 kDTreeNode* kDTree::findMinNode(kDTreeNode *node, int axis, int depth) {
     if (node == nullptr) return nullptr;
