@@ -40,7 +40,6 @@ private:
     kDTreeNode *root;
 private:
 kDTreeNode* buildTreeRecursive(const vector<vector<int>> &pointList, int depth);
-    int chooseSplitAxis(const vector<vector<int>> &pointList, int depth);
     void insertRecursive(kDTreeNode *&node, const vector<int> &point, int depth);
     bool searchRecursive(kDTreeNode *node, const vector<int> &point, int depth);
     void inorderTraversalRecursive(kDTreeNode *node) const;
@@ -52,9 +51,13 @@ kDTreeNode* buildTreeRecursive(const vector<vector<int>> &pointList, int depth);
     void removeRecursive(kDTreeNode *&node, const vector<int> &point, int depth);
     kDTreeNode* findMinNode(kDTreeNode *node, int axis, int depth);
     void nearestNeighbourRecursive(kDTreeNode *node, const vector<int> &target, kDTreeNode *&best, int depth);
-    void kNearestNeighbourRecursive(kDTreeNode *node, const vector<int> &target, int k, vector<kDTreeNode *> &bestList, int depth);
+    void kNearestNeighbourRecursive(kDTreeNode* node, const std::vector<int>& target, int k, std::list<std::pair<double, kDTreeNode*>>& nearestNeighbors, int depth);
+    void insertSorted(std::list<std::pair<double, kDTreeNode*>>& nearestNeighbors, const std::pair<double, kDTreeNode*>& nodePair);
 public:
-    kDTree(int k = 2, int count = 0);
+    kDTree(int k = 2, int count = 0){
+        this-> k = k;
+        this-> count = count;
+    };
     ~kDTree();
  
     kDTreeNode* deepCopy(const kDTreeNode* node);
