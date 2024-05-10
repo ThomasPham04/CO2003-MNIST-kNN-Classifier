@@ -7,15 +7,22 @@
 struct kDTreeNode
 {
     vector<int> data;
+    int label;
     kDTreeNode *left;
     kDTreeNode *right;
+    kDTreeNode(vector<int> data, int lable, kDTreeNode *left = nullptr, kDTreeNode *right = nullptr)
+    {
+        this->data = data;
+        this->label = label;
+        this->left = left;
+        this->right = right;
+    }
     kDTreeNode(vector<int> data, kDTreeNode *left = nullptr, kDTreeNode *right = nullptr)
     {
         this->data = data;
         this->left = left;
         this->right = right;
     }
-
     friend ostream &operator<<(ostream &os, const kDTreeNode &node)
     {
         os << "(";
@@ -39,7 +46,8 @@ private:
     int count;
     kDTreeNode *root;
 private:
-kDTreeNode* buildTreeRecursive(const vector<vector<int>> &pointList, int depth);
+    kDTreeNode* buildTreeRecursive(const vector<vector<int>> &pointList, int depth);
+    kDTreeNode* buildTreeLabelRec(const vector<vector<int>> &pointList, const vector<int> &labelList, int depth);
     void insertRecursive(kDTreeNode *&node, const vector<int> &point, int depth);
     bool searchRecursive(kDTreeNode *node, const vector<int> &point, int depth);
     void inorderTraversalRecursive(kDTreeNode *node) const;
@@ -54,9 +62,10 @@ kDTreeNode* buildTreeRecursive(const vector<vector<int>> &pointList, int depth);
     void kNearestNeighbourRecursive(kDTreeNode* node, const std::vector<int>& target, int k, std::list<std::pair<double, kDTreeNode*>>& nearestNeighbors, int depth);
     void insertSorted(std::list<std::pair<double, kDTreeNode*>>& nearestNeighbors, const std::pair<double, kDTreeNode*>& nodePair);
 public:
-    kDTree(int k = 2, int count = 0){
+    kDTree(int k = 2){
         this-> k = k;
-        this-> count = count;
+        this-> count = 0;
+        this->root = nullptr;
     };
     ~kDTree();
  
@@ -66,6 +75,10 @@ public:
 
     vector<vector<int>> merge(const vector<vector<int>> &left, const vector<vector<int>>&right, int axis);
     vector<vector<int>> mergeSort(const vector<vector<int>> &arr, int axis);
+
+    vector<pair<vector<int>, int>> kDTree::mergeSortLabel(const vector<pair<vector<int>, int>>& arr, int axis);
+    vector<pair<vector<int>, int>> kDTree::mergeLabel(const vector<pair<vector<int>, int>>& left, const vector<pair<vector<int>, int>>& right, int axis);
+
     void inorderTraversal() const;
     void preorderTraversal() const;
     void postorderTraversal() const;
@@ -77,6 +90,7 @@ public:
     void remove(const vector<int> &point);
     bool search(const vector<int> &point);
     void buildTree(const vector<vector<int>> &pointList);
+    void buildTreeLabel(const vector<vector<int>> &pointList, const vector<int> &lableList);
     void nearestNeighbour(const vector<int> &target, kDTreeNode *&best);
     void kNearestNeighbour(const vector<int> &target, int k, vector<kDTreeNode *> &bestList);
 };
@@ -85,10 +99,14 @@ class kNN
 {
 private:
     int k;
-
+    Dataset X_train;
+    Dataset Y_train;
+    kDTree kdtree;
 public:
-    kNN(int k = 5);
-    void fit(Dataset &X_train, Dataset &y_train);
+    kNN(int k = 5){
+        this-> k = k;
+    }
+    void fit(Dataset &X_train, Dataset &Y_train);
     Dataset predict(Dataset &X_test);
     double score(const Dataset &y_test, const Dataset &y_pred);
 };
