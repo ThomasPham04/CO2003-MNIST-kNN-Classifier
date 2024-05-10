@@ -38,7 +38,14 @@ vector<vector<int>> kDTree::mergeSort(const vector<vector<int>> &arr, int axis) 
 
     return merge(left, right, axis);
 }
-
+void kDTree::delTree(kDTreeNode* node){
+    if (node==nullptr){
+        return;
+    }
+    delTree(node->left);
+    delTree(node->right);
+    delete node;
+}
 vector<vector<int>> kDTree::merge(const vector<vector<int>> &left, const vector<vector<int>> &right, int axis) {
     vector<vector<int>> result;
     size_t leftIdx = 0;
@@ -185,10 +192,6 @@ void kDTree::buildTreeLabel(const vector<vector<int>>& pointList, const vector<i
     this->root = buildTreeLabelRec(pointList, labelList, 0);
 }
 
-void kDTree::buildTreeLabel(const vector<vector<int>> &pointList,const vector<int> &lableList){
-    this->count = pointList.size();
-    this->root = buildTreeLabelRec(pointList, lableList, 0);
-}
 void kDTree::insert(const vector<int> &point) {
     if (point.size() != k){
         return;
@@ -441,14 +444,23 @@ void kDTree::insertSorted(std::list<std::pair<double, kDTreeNode*>>& nearestNeig
 /****************************************END KDTREE****************************************/
 
 /****************************************BEGIN KNN****************************************/
-void kNN::fit(Dataset &X_train, Dataset &Y_train){
+void kNN::fit(Dataset &X_train, Dataset &Y_train) {
     this->X_train = X_train;
     this->Y_train = Y_train;
+    
     int dim = X_train.data.front().size();
     vector<vector<int>> pointList;
     vector<int> label;
 
-    //TODO chuyen x_train va y_train
+    for (const auto& it:X_train.data){
+        vector<int> tmp (next(it.begin()), it.end());
+        pointList.push_back(tmp);
+    }
+    for (const auto& it:X_train.data){
+        label.push_back(it.front());
+    }
+    // Build the k-D Tree using the converted data
     kdtree.buildTreeLabel(pointList, label);
 }
+
 /****************************************END KNN****************************************/

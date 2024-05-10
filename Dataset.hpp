@@ -7,7 +7,7 @@ private:
     vector<string> columnName;
 
 public:
-    Dataset();
+    Dataset();  
     ~Dataset();
     bool loadFromCSV(const char *fileName);
     void printHead(int nRows = 5, int nCols = 5) const;
