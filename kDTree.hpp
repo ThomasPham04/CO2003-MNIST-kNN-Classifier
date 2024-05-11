@@ -115,12 +115,10 @@ public:
 
     // Iterate over each data point in X_test
     for (const auto& data_point : X_test.data) {
-        // Convert the data point from list<int> to vector<int>
-        vector<int> data_vector(data_point.begin(), data_point.end());
-
         // Find k nearest neighbors for the current data point
+        vector<int> tmp (next(data_point.begin()), data_point.end());
         vector<kDTreeNode*> neighbors;
-        kdtree.kNearestNeighbour(data_vector, k, neighbors);
+        kdtree.kNearestNeighbour(tmp, k, neighbors);
 
         // Count occurrences of each label among the neighbors
         vector<int> label_counts(10, 0); // Assuming labels range from 0 to 9
@@ -138,22 +136,21 @@ public:
             }
         }
 
-        // Add the predicted label to the temporary vector
+        // Add the predicted label to the y_pred dataset
         y_pred.data.push_back({predicted_label});
     }
 
     return y_pred;
 }
 
+
     double score(const Dataset& y_test, const Dataset& y_pred) {
     int total_images = y_test.data.size();
     int correct_predictions = 0;
 
-    // Create iterators for y_test and y_pred
     auto test_it = y_test.data.begin();
     auto pred_it = y_pred.data.begin();
 
-    // Iterate over each pair of predicted and actual labels
     while (test_it != y_test.data.end() && pred_it != y_pred.data.end()) {
         int actual_label = (*test_it).front();   // Get the first element of the list
         int predicted_label = (*pred_it).front();
@@ -162,12 +159,10 @@ public:
             correct_predictions++;
         }
 
-        // Move to the next pair
         ++test_it;
         ++pred_it;
     }
 
-    // Calculate accuracy
     double accuracy = static_cast<double>(correct_predictions) / total_images;
     return accuracy;
 }

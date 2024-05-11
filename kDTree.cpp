@@ -99,98 +99,45 @@ kDTreeNode* kDTree::buildTreeRecursive(const vector<vector<int>> &pointList, int
 void kDTree::buildTree(const vector<vector<int>> &pointList) {
     root = buildTreeRecursive(pointList, 0);
 }
-vector<pair<vector<int>, int>> kDTree::mergeSortLabel(const vector<pair<vector<int>, int>>& arr, int axis) {
-    if (arr.size() <= 1) {
-        return arr;
-    }
-
-    size_t mid = arr.size() / 2;
-
-    vector<pair<vector<int>, int>> left(arr.begin(), arr.begin() + mid);
-    vector<pair<vector<int>, int>> right(arr.begin() + mid, arr.end());
-
-    left = mergeSortLabel(left, axis);
-    right = mergeSortLabel(right, axis);
-
-    return mergeLabel(left, right, axis);
-}
-
-vector<pair<vector<int>, int>> kDTree::mergeLabel(const vector<pair<vector<int>, int>>& left, const vector<pair<vector<int>, int>>& right, int axis) {
-    vector<pair<vector<int>, int>> result;
-    size_t leftIdx = 0;
-    size_t rightIdx = 0;
-
-    while (leftIdx < left.size() && rightIdx < right.size()) {
-        if (left[leftIdx].first[axis] < right[rightIdx].first[axis]) {
-            result.push_back(left[leftIdx]);
-            leftIdx++;
-        } else {
-            result.push_back(right[rightIdx]);
-            rightIdx++;
-        }
-    }
-
-    while (leftIdx < left.size()) {
-        result.push_back(left[leftIdx]);
-        leftIdx++;
-    }
-
-    while (rightIdx < right.size()) {
-        result.push_back(right[rightIdx]);
-        rightIdx++;
-    }
-
-    return result;
-}
 
 kDTreeNode* kDTree::buildTreeLabelRec(const vector<vector<int>>& pointList, const vector<int>& labelList, int depth) {
+    // Check if pointList or labelList is empty, or if their sizes don't match
     if (pointList.empty() || labelList.empty() || pointList.size() != labelList.size()) {
         return nullptr;
     }
 
     int axis = depth % k;
 
-    // Merge sort the combined list based on the current axis
-    vector<pair<vector<int>, int>> combinedList;
-    for (size_t i = 0; i < pointList.size(); ++i) {
-        combinedList.push_back({pointList[i], labelList[i]});
+    vector<vector<int>> sortedPointList = mergeSort(pointList, axis);
+    size_t medianIndex = sortedPointList.size() / 2;
+
+    kDTreeNode* medianNode = nullptr;
+    if (sortedPointList[0].size() > 1) {
+        medianNode = new kDTreeNode(sortedPointList[medianIndex], labelList[medianIndex]);
+    } else {
+        medianNode = new kDTreeNode(sortedPointList[medianIndex]);
+        medianNode->label = labelList[medianIndex];
     }
-    combinedList = mergeSortLabel(combinedList, axis);
 
-    // Find the median index
-    size_t medianIndex = combinedList.size() / 2;
-
-    // Create a new node with the median point and label
-    kDTreeNode* medianNode = new kDTreeNode(combinedList[medianIndex].first);
-    medianNode->label = combinedList[medianIndex].second;
-
-    // Recursively build the left subtree with points before the median
-    vector<pair<vector<int>, int>> leftCombinedList(combinedList.begin(), combinedList.begin() + medianIndex);
-    vector<vector<int>> leftPointList;
-    vector<int> leftLabelList;
-    for (const auto& pair : leftCombinedList) {
-        leftPointList.push_back(pair.first);
-        leftLabelList.push_back(pair.second);
-    }
+    vector<vector<int>> leftPointList(sortedPointList.begin(), sortedPointList.begin() + medianIndex);
+    vector<int> leftLabelList(labelList.begin(), labelList.begin() + medianIndex);
     medianNode->left = buildTreeLabelRec(leftPointList, leftLabelList, depth + 1);
 
     // Recursively build the right subtree with points after the median
-    vector<pair<vector<int>, int>> rightCombinedList(combinedList.begin() + medianIndex + 1, combinedList.end());
-    vector<vector<int>> rightPointList;
-    vector<int> rightLabelList;
-    for (const auto& pair : rightCombinedList) {
-        rightPointList.push_back(pair.first);
-        rightLabelList.push_back(pair.second);
-    }
+    vector<vector<int>> rightPointList(sortedPointList.begin() + medianIndex + 1, sortedPointList.end());
+    vector<int> rightLabelList(labelList.begin() + medianIndex + 1, labelList.end());
     medianNode->right = buildTreeLabelRec(rightPointList, rightLabelList, depth + 1);
 
     return medianNode;
 }
 
 void kDTree::buildTreeLabel(const vector<vector<int>>& pointList, const vector<int>& labelList) {
+    // Set count to the size of pointList
     this->count = pointList.size();
+    // Build the tree recursively
     this->root = buildTreeLabelRec(pointList, labelList, 0);
 }
+
 
 void kDTree::insert(const vector<int> &point) {
     if (point.size() != k){
@@ -234,7 +181,7 @@ void kDTree::remove(const vector<int> &point) {
     count--;
 }
 
-void kDTree::removeRecursive(kDTreeNode *&node, const vector<int> &point, int depth) {
+void kDTree::removeRecursive(kDTreeNode*& node, const vector<int>& point, int depth) {
     if (node == nullptr) {
         return;
     }
@@ -243,11 +190,11 @@ void kDTree::removeRecursive(kDTreeNode *&node, const vector<int> &point, int de
 
     if (node->data == point) {
         if (node->right != nullptr) {
-            kDTreeNode *minNode = findMinNode(node->right, axis, depth + 1);
+            kDTreeNode* minNode = findMinNode(node->right, axis, depth + 1);
             node->data = minNode->data;
             removeRecursive(node->right, minNode->data, depth + 1);
         } else if (node->left != nullptr) {
-            kDTreeNode *minNode = findMinNode(node->left, axis, depth + 1);
+            kDTreeNode* minNode = findMinNode(node->left, axis, depth + 1);
             node->data = minNode->data;
             removeRecursive(node->left, minNode->data, depth + 1);
         } else {
@@ -262,24 +209,15 @@ void kDTree::removeRecursive(kDTreeNode *&node, const vector<int> &point, int de
 }
 
 
-kDTreeNode* kDTree::findMinNode(kDTreeNode *node, int axis, int depth) {
+
+kDTreeNode* kDTree::findMinNode(kDTreeNode* node, int axis, int depth) {
     if (node == nullptr) return nullptr;
 
     int nextAxis = (depth + 1) % k;
-    if (node->left == nullptr && node->right == nullptr) return node;
+    
+    if (node->left == nullptr) return node; // If there's no left child, this is the minimum
 
-    kDTreeNode *leftMin = findMinNode(node->left, axis, depth + 1);
-    kDTreeNode *rightMin = findMinNode(node->right, axis, depth + 1);
-
-    if (leftMin != nullptr && rightMin != nullptr) {
-        if (leftMin->data[axis] < rightMin->data[axis])
-            return leftMin;
-        else
-            return rightMin;
-    } else if (leftMin != nullptr)
-        return leftMin;
-    else
-        return rightMin;
+    return findMinNode(node->left, axis, depth + 1);
 }
 
 void kDTree::inorderTraversal() const {
@@ -450,17 +388,16 @@ void kNN::fit(Dataset &X_train, Dataset &Y_train) {
     
     int dim = X_train.data.front().size();
     vector<vector<int>> pointList;
-    vector<int> label;
+    vector<int> labelList;
 
     for (const auto& it:X_train.data){
-        vector<int> tmp (next(it.begin()), it.end());
+        vector<int> tmp (it.begin(), it.end());
         pointList.push_back(tmp);
     }
-    for (const auto& it:X_train.data){
-        label.push_back(it.front());
+    for (const auto& it:Y_train.data){
+        labelList.push_back(it.front());
     }
-    // Build the k-D Tree using the converted data
-    kdtree.buildTreeLabel(pointList, label);
+    kdtree.buildTreeLabel(pointList, labelList);
 }
 
 /****************************************END KNN****************************************/
