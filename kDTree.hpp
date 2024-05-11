@@ -62,7 +62,8 @@ private:
     void kNearestNeighbourRecursive(kDTreeNode* node, const std::vector<int>& target, int k, std::list<std::pair<double, kDTreeNode*>>& nearestNeighbors, int depth);
     void insertSorted(std::list<std::pair<double, kDTreeNode*>>& nearestNeighbors, const std::pair<double, kDTreeNode*>& nodePair);
     void delTree(kDTreeNode* node);
-    
+
+    kDTreeNode* minNode(kDTreeNode* x, kDTreeNode* y, kDTreeNode* z, int axis);
 public:
     kDTree(int k = 2){
         this-> k = k;
@@ -72,62 +73,12 @@ public:
     ~kDTree(){
         delTree(root);
     };
-    kDTreeNode* minNode(kDTreeNode* x,kDTreeNode* y,kDTreeNode* z,int d) {  // hàm này để tìm node nhỏ nhất trong 3 node theo chiều d
-	kDTreeNode* res=x;
-	if (y!=NULL && y->data[d]<res->data[d]) {
-		res=y;
-	}
-	if (z!=NULL && z->data[d]<res->data[d]) {
-		res=z;
-	}
-	return res;
-}
     kDTreeNode* deepCopy(const kDTreeNode* node);
     const kDTree &operator=(const kDTree &other);
     kDTree(const kDTree &other);
 
     vector<vector<int>> merge(const vector<vector<int>> &left, const vector<vector<int>>&right, int axis);
     vector<vector<int>> mergeSort(const vector<vector<int>> &arr, int axis);
-kDTreeNode* deleteNode(kDTreeNode* tmp,const std::vector<int>& point,int depth) {
-	if (tmp==nullptr) {
-		return nullptr;
-	}
-	int alpha=depth%k;
-	if (tmp->data==point) {
-		if(tmp->right!=nullptr) {
-			kDTreeNode* min=findMinNode(tmp->right,alpha,depth+1);
-			tmp->data=min->data;
-			tmp->right=deleteNode(tmp->right,min->data,depth+1);
-			
-			
-			
-		}		
-		
-		else if (tmp->left!=nullptr) {
-			kDTreeNode* min=findMinNode(tmp->left,alpha,depth+1);
-			tmp->data=min->data;
-			tmp->right=tmp->left;
-			tmp->left=nullptr;
-			tmp->right=deleteNode(tmp->right,min->data,depth+1);
-
-		}
-		else if(!tmp->left && !tmp->right) {
-     delete tmp;
-     
-     return nullptr;	
-		}
-		return tmp;
-
-	} 
-	if (point[alpha]<tmp->data[alpha]) {
-		tmp->left=deleteNode(tmp->left,point,depth+1);
-	}
-	else {
-		tmp->right=deleteNode(tmp->right,point,depth+1);
-	}
-	
-	return tmp;
-}
     void inorderTraversal() const;
     void preorderTraversal() const;
     void postorderTraversal() const;
@@ -155,7 +106,22 @@ public:
     kNN(int k = 5){
         this-> k = k;
     }
-    void fit(Dataset &X_train, Dataset &Y_train);
+    void fit(Dataset &X_train, Dataset &Y_train) {
+    this->X_train = X_train;
+    this->Y_train = Y_train;
+    
+    vector<vector<int>> pointList;
+    vector<int> labelList;
+
+    for (const auto& it:X_train.data){
+        vector<int> tmp (it.begin(), it.end());
+        pointList.push_back(tmp);
+    }
+    for (const auto& it:Y_train.data){
+        labelList.push_back(it.front());
+    }
+    kdtree.buildTreeLabel(pointList, labelList);
+}
     Dataset predict(const Dataset& X_test) {
     Dataset y_pred;
     y_pred.columnName.push_back("label");
