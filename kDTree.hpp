@@ -1,4 +1,3 @@
-
 #include "main.hpp"
 #include "Dataset.hpp"
 /* TODO: Please design your data structure carefully so that you can work with the given dataset
@@ -144,7 +143,6 @@ public:
             }
         }
 
-        // Add the predicted label to the y_pred dataset
         y_pred.data.push_back({predicted_label});
     }
 
@@ -176,5 +174,3 @@ double score(const Dataset& y_test, const Dataset& y_pred) {
 }
 
 };
-
-// Please add more or modify as needed

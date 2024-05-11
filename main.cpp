@@ -129,7 +129,6 @@ void tc9()
     Dataset dataset;
     dataset.loadFromCSV("mnist.csv");
     int nRows, nCols;
-
     kNN knn;
     Dataset X_train, X_test, y_train, y_test;
     Dataset feature = dataset.extract(0, -1, 1, -1);
@@ -144,7 +143,10 @@ void tc9()
 
 int main(int argc, const char *argv[])
 {
-    tc5();
+    tc9();
+    // BEFORE     (5, 6), (2, 2), (7, 3), (2, 8), (8, 7), (8, 1), (9, 4), (3, 5)
+    // AFTER SORT (2, 2), (2, 8), (3, 5), (5, 6), (7, 3), (8, 1), (8, 7), (9, 4)
 
+    // (5, 6) (3, 5) (2, 2) (2, 8) (7, 3) (8, 1) (8, 7) (9, 4)
     return 0;
 }

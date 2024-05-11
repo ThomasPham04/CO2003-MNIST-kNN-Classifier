@@ -97,19 +97,19 @@ kDTreeNode* kDTree::buildTreeRecursive(const vector<vector<int>> &pointList, int
     int axis = depth % k;
 
     vector<vector<int>> sortedPointList = mergeSort(pointList, axis);
-    size_t medianIndex = (sortedPointList.size()-1) / 2;
-    while (medianIndex > 0 && sortedPointList[medianIndex][axis] == sortedPointList[medianIndex-1][axis]){
-        medianIndex--;
+    size_t medIndex = (sortedPointList.size()-1) / 2;
+    while (medIndex > 0 && sortedPointList[medIndex][axis] == sortedPointList[medIndex-1][axis]){
+        medIndex--;
     }
-    kDTreeNode* medianNode = new kDTreeNode(sortedPointList[medianIndex]);
+    kDTreeNode* medNode = new kDTreeNode(sortedPointList[medIndex]);
 
-    vector<vector<int>> leftPointList(sortedPointList.begin(), sortedPointList.begin() + medianIndex);
-    medianNode->left = buildTreeRecursive(leftPointList, depth + 1);
+    vector<vector<int>> leftPointList(sortedPointList.begin(), sortedPointList.begin() + medIndex);
+    medNode->left = buildTreeRecursive(leftPointList, depth + 1);
 
-    vector<vector<int>> rightPointList(sortedPointList.begin() + medianIndex + 1, sortedPointList.end());
-    medianNode->right = buildTreeRecursive(rightPointList, depth + 1);
+    vector<vector<int>> rightPointList(sortedPointList.begin() + medIndex + 1, sortedPointList.end());
+    medNode->right = buildTreeRecursive(rightPointList, depth + 1);
 
-    return medianNode;
+    return medNode;
 }
 
 void kDTree::buildTree(const vector<vector<int>> &pointList) {
@@ -122,31 +122,40 @@ kDTreeNode* kDTree::buildTreeLabelRec(const vector<vector<int>>& pointList, cons
     }
 
     int axis = depth % k;
-
     vector<vector<int>> sortedPointList = mergeSort(pointList, axis);
-    size_t medianIndex = (sortedPointList.size()-1)/2;
-    while (medianIndex > 0 && sortedPointList[medianIndex][axis] == sortedPointList[medianIndex-1][axis]){
-        medianIndex--;
-    }
-    
-    kDTreeNode* medianNode = nullptr;
-    if (sortedPointList[0].size() > 1) {
-        medianNode = new kDTreeNode(sortedPointList[medianIndex], labelList[medianIndex]);
-    } else {
-        medianNode = new kDTreeNode(sortedPointList[medianIndex]);
-        medianNode->label = labelList[medianIndex];
+     size_t medIndex = (sortedPointList.size()-1)/2;
+    while (medIndex > 0 && sortedPointList[medIndex][axis] == sortedPointList[medIndex-1][axis]){
+        medIndex--;
     }
 
-    vector<vector<int>> leftPointList(sortedPointList.begin(), sortedPointList.begin() + medianIndex);
-    vector<int> leftLabelList(labelList.begin(), labelList.begin() + medianIndex);
-    medianNode->left = buildTreeLabelRec(leftPointList, leftLabelList, depth + 1);
+    kDTreeNode* medNode = new kDTreeNode(pointList[medIndex]);
+    medNode->label = labelList[medIndex];
 
-    vector<vector<int>> rightPointList(sortedPointList.begin() + medianIndex + 1, sortedPointList.end());
-    vector<int> rightLabelList(labelList.begin() + medianIndex + 1, labelList.end());
-    medianNode->right = buildTreeLabelRec(rightPointList, rightLabelList, depth + 1);
+    vector<vector<int>> leftPointList;
+    vector<int> leftLabelList;
+    vector<vector<int>> rightPointList;
+    vector<int> rightLabelList;
 
-    return medianNode;
+    for (size_t i = 0; i < pointList.size(); ++i) {
+        if (i == medIndex) {
+            continue; 
+        }
+
+        if (pointList[i][axis] < pointList[medIndex][axis]) {
+            leftPointList.push_back(pointList[i]);
+            leftLabelList.push_back(labelList[i]);
+        } else {
+            rightPointList.push_back(pointList[i]);
+            rightLabelList.push_back(labelList[i]);
+        }
+    }
+
+    medNode->left = buildTreeLabelRec(leftPointList, leftLabelList, depth + 1);
+    medNode->right = buildTreeLabelRec(rightPointList, rightLabelList, depth + 1);
+
+    return medNode;
 }
+
 
 void kDTree::buildTreeLabel(const vector<vector<int>>& pointList, const vector<int>& labelList) {
     this->count = pointList.size();
@@ -188,16 +197,22 @@ bool kDTree::searchRecursive(kDTreeNode *node, const vector<int> &point, int dep
         return searchRecursive(node->right, point, depth + 1);
 }
 
-kDTreeNode* kDTree::minNode(kDTreeNode* Node1, kDTreeNode* Node2, kDTreeNode* Node3, int axis) {
-    kDTreeNode* res = Node1;
-    if (Node2 != nullptr && Node2->data[axis] < res->data[axis]) {
-        res = Node2;
+kDTreeNode* kDTree::minNode(kDTreeNode* node, kDTreeNode* leftMin, kDTreeNode* rightMin, int axis) {
+    kDTreeNode* minNode = nullptr;
+
+    if (node == nullptr || (leftMin != nullptr && leftMin->data[axis] < node->data[axis]) || (rightMin != nullptr && rightMin->data[axis] < node->data[axis])) {
+        minNode = node;
+    } else {
+        if (leftMin == nullptr || (rightMin != nullptr && rightMin->data[axis] < leftMin->data[axis])) {
+            minNode = rightMin;
+        } else {
+            minNode = leftMin;
+        }
     }
-    if (Node3 != nullptr && Node3->data[axis] < res->data[axis]) {
-        res = Node3;
-    }
-    return res;
+
+    return minNode;
 }
+
 kDTreeNode* kDTree::findMinNode(kDTreeNode* node, int axis, int depth) {
     if (node == nullptr) {
         return nullptr;
@@ -253,9 +268,6 @@ void kDTree::removeRecursive(kDTreeNode*& node, const vector<int>& point, int de
         removeRecursive(node->right, point, depth + 1);
     }
 }
-
-
-
 
 void kDTree::inorderTraversal() const {
     inorderTraversalRecursive(root);
@@ -414,10 +426,5 @@ void kDTree::insertSorted(std::list<std::pair<double, kDTreeNode*>>& nearestNeig
     nearestNeighbors.insert(it, nodePair);
 }
 
-
-
 /****************************************END KDTREE****************************************/
 
-/****************************************BEGIN KNN****************************************/
-
-/****************************************END KNN****************************************/
