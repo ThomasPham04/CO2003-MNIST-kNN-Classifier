@@ -74,7 +74,6 @@ vector<vector<int>> kDTree::merge(const vector<vector<int>> &left, const vector<
         }
     }
 
-    // Append remaining elements from left and right
     while (leftIdx < left.size()) {
         result.push_back(left[leftIdx]);
         leftIdx++;
@@ -198,20 +197,16 @@ bool kDTree::searchRecursive(kDTreeNode *node, const vector<int> &point, int dep
 }
 
 kDTreeNode* kDTree::minNode(kDTreeNode* node, kDTreeNode* leftMin, kDTreeNode* rightMin, int axis) {
-    kDTreeNode* minNode = nullptr;
-
-    if (node == nullptr || (leftMin != nullptr && leftMin->data[axis] < node->data[axis]) || (rightMin != nullptr && rightMin->data[axis] < node->data[axis])) {
-        minNode = node;
-    } else {
-        if (leftMin == nullptr || (rightMin != nullptr && rightMin->data[axis] < leftMin->data[axis])) {
-            minNode = rightMin;
-        } else {
-            minNode = leftMin;
-        }
+    kDTreeNode* min = node;
+    if (leftMin != nullptr && leftMin->data[axis] < min->data[axis]) {
+        min = leftMin;
     }
-
-    return minNode;
+    if (rightMin != nullptr && rightMin->data[axis] < min->data[axis]) {
+        min = rightMin;
+    }
+    return min;
 }
+
 
 kDTreeNode* kDTree::findMinNode(kDTreeNode* node, int axis, int depth) {
     if (node == nullptr) {
